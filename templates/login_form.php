@@ -31,7 +31,7 @@
 	<?php
 		wp_login_form(
 			array(
-				'label_username' => __( 'Email', 'onex-login' ),
+				'label_username' => __( 'Username', 'onex-login' ),
 				'label_log_in' => __( 'Sign In', 'onex-login' ),
 				'redirect' => $attributes['redirect'],
 			)

@@ -180,11 +180,13 @@ class Onex_Login_Register_Plugin{
 				wp_redirect( admin_url() );
 			}
 		}else {
-			wp_redirect( home_url( 'member-account' ) );
+			//wp_redirect( home_url( 'member-account' ) );
+			wp_redirect( home_url( 'profil') );
 		}
 	}
 
-	private function register_user( $email, $first_name, $last_name ) {
+	//private function register_user( $email, $first_name, $last_name ) {
+	private function register_user( $email, $user_name, $first_name, $last_name ) {
 		$errors = new WP_Error();
 
 		if ( ! is_email($email) ) {
@@ -192,15 +194,27 @@ class Onex_Login_Register_Plugin{
 			return $errors;
 		}
 
-		if ( username_exists( $email ) || email_exists( $mail ) ) {
+		/*if ( username_exists( $email ) || email_exists( $mail ) ) {
 			$errors->add( 'email_exists', $this->get_error_message( 'email_exists'));
+			return $errors;
+		}*/
+
+		if ( email_exists( $email) || username_exists( $user_name ) || $user_name=="" || strlen($user_name) >60 ){
+			if( email_exists( $email) )
+				$errors->add( 'email_exists', $this->get_error_message( 'email_exists'));
+			if( username_exists( $user_name ))
+				$errors->add( 'username_exists', $this->get_error_message( 'username_exists'));
+			if( $user_name=="" )
+				$errors->add( 'empty_username', $this->get_error_message( 'empty_username'));
+			if( strlen($user_name) >60 )
+				$errors->add( 'username_over', $this->get_error_message( 'username_over'));
 			return $errors;
 		}
 
 		$password = wp_generate_password( 12, false );
 
 		$user_data = array(
-			'user_login' => $email,
+			'user_login' => $user_name,
 			'user_email' => $email,
 			'user_pass'  => $password,
 			'first_name' => $first_name,
@@ -211,7 +225,16 @@ class Onex_Login_Register_Plugin{
 		$user_id = wp_insert_user( $user_data );
 		wp_new_user_notification ( $user_id, $password );
 
+		//$this->sendEmailToNewUser( $email, $user_data['user_pass'] );
+
 		return $user_id;
+	}
+
+	function sendEmailToNewUser( $to_email, $password) {
+		$subject = 'Otw Express: ' . __('Registration', 'wp_mail_smtp');
+		$message = __('Password anda: ', 'wp_mail_smtp');
+
+		wp_mail( $to, $subject, $message);
 	}
 
 	public function do_register_user(){
@@ -224,15 +247,16 @@ class Onex_Login_Register_Plugin{
 				$email = $_POST['email'];
 				$first_name = sanitize_text_field( $_POST['first_name'] );
 				$last_name = sanitize_text_field( $_POST['last_name'] );
-				//$username = sanitize_text_field( $_POST['username'] );
+				$user_name = sanitize_text_field( $_POST['username'] );
 
-				$result = $this->register_user( $email, $first_name, $last_name );
-				//$result = $this->register_user( $email, $user_name, $first_name, $last_name );
+				//$result = $this->register_user( $email, $first_name, $last_name );
+				$result = $this->register_user( $email, $user_name, $first_name, $last_name );
 			}
+			//var_dump($result); wp_die();
 
 			if( is_wp_error( $result )) {
 				$errors = join( ',', $result->get_error_codes() );
-				$redirect_url = add_query_arg( 'register-errors', $error, $redirect_url );
+				$redirect_url = add_query_arg( 'register-errors', $errors, $redirect_url );
 			}else{
 				$redirect_url = home_url( 'member-login' );
 				$redirect_url = add_query_arg( 'registered', $email, $redirect_url );
@@ -277,6 +301,10 @@ class Onex_Login_Register_Plugin{
 				return __( 'Email tidak valid.', 'onex-login');
 			case 'email_exists':
 				return __( 'Email sudah pernah digunakan untuk registrasi.', 'onex-login');
+			case 'username_exists':
+				return __( 'Username sudah digunakan untuk registrasi.', 'onex-login');
+			case 'username_over':
+				return __( 'Username maksimal 60 karakter', 'onex-login');
 			case 'closed':
 				return __( 'Untuk saat ini tidak dapat melakukan registrasi.', 'onex-login');
 			default:
@@ -308,7 +336,8 @@ class Onex_Login_Register_Plugin{
 			}
 		}else {
 			// Non-admin users always go to their account page after login
-			$redirect_url = home_url( 'member-account' );
+			//$redirect_url = home_url( 'member-account' );
+			$redirect_url = home_url( 'profil' );
 		}
 
 		return wp_validate_redirect( $redirect_url, home_url() );

@@ -8,12 +8,13 @@
             <p><?php echo $error; ?></p>
         <?php endforeach; ?>
     <?php endif; ?>
+    <?php //var_dump($attributes); ?>
 
 	<form id="signupform" action="<?php echo wp_registration_url(); ?>" method="post">
-        <!-- <p class="form-row">
-            <label for="username"><?php //_e( 'Username', 'onex-login' ); ?> <strong>*</strong></label>
+        <p class="form-row">
+            <label for="username"><?php _e( 'Username', 'onex-login' ); ?> <strong>*</strong></label>
             <input type="text" name="username" id="username">
-        </p> -->
+        </p>
 		<p class="form-row">
             <label for="email"><?php _e( 'Email', 'onex-login' ); ?> <strong>*</strong></label>
             <input type="text" name="email" id="email">
